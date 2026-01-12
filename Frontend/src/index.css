@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --color-maroon: #722F37;
+  --color-bone: #FAF0E6;
+  --color-silver: #C0C0C0;
+  --color-dark: #333333;
+  --color-shadow: rgba(0, 0, 0, 0.4);
+
+  /* Fonts */
+  --font-serif: "Georgia", serif;
+  --font-mono: "monospace";
+
+  /* Transitions */
+  --transition-smooth: 0.2s ease;
+}
+
+/* Base reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-serif);
+  background-color: var(--color-maroon);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 3D Perspective Utilities */
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

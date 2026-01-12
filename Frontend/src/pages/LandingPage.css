@@ -1,0 +1,269 @@
+/* ========================================
+   Landing Page - Responsive Styles
+   Using CSS Variables for Maintainability
+   ======================================== */
+
+.landing-page {
+    background-color: var(--color-maroon);
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+
+/* ========== HEADER ========== */
+.landing-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transform: translateZ(25px);
+    z-index: 20;
+    flex-shrink: 0;
+}
+
+.landing-header__logo {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.landing-header__brand {
+    color: var(--color-bone);
+    font-size: 1rem;
+    font-family: var(--font-serif);
+}
+
+/* ========== CONTENT AREA ========== */
+.landing-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+    padding: 2rem 1rem;
+}
+
+/* ========== TITLE ========== */
+.landing-title-wrapper {
+    align-self: flex-start;
+    margin-bottom: 2rem;
+    transform: translateZ(20px);
+    margin-left: 1rem;
+}
+
+.landing-title {
+    color: var(--color-bone);
+    font-family: var(--font-serif);
+    font-size: 1.8rem;
+    line-height: 1.2;
+    margin: 0;
+    font-weight: bold;
+}
+
+/* ========== BUTTON ========== */
+.landing-button {
+    background-color: var(--color-silver);
+    border: 2px solid var(--color-dark);
+    padding: 0.5rem 2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transform: translateZ(15px);
+    transition: transform var(--transition-smooth);
+}
+
+.landing-button:hover {
+    transform: translateZ(15px) scale(1.05);
+}
+
+.landing-button:active {
+    transform: translateZ(15px) scale(0.98);
+}
+
+/* ========== CAT ILLUSTRATIONS ========== */
+.cat-decoration {
+    position: absolute;
+    z-index: 30;
+    pointer-events: none;
+}
+
+.cat-top {
+    top: -10px;
+    right: -15px;
+    width: 140px;
+    transform: translateZ(60px);
+    filter: drop-shadow(0 10px 20px var(--color-shadow));
+}
+
+.cat-mid {
+    bottom: -10px;
+    right: 15%;
+    width: clamp(120px, 26vw, 200px);
+    z-index: 25;
+    transform: translateZ(50px);
+    filter: drop-shadow(0 10px 20px var(--color-shadow));
+}
+
+.cat-bottom {
+    bottom: -10px;
+    right: -10px;
+    width: 150px;
+    transform: translateZ(55px);
+    filter: drop-shadow(0 10px 20px var(--color-shadow));
+}
+
+@media (max-width: 360px) {
+    .cat-mid {
+        display: none;
+    }
+}
+@media (min-width: 1024px) {
+    .cat-mid {
+        right: 260px;
+        bottom: -10px;
+        width: 220px; 
+    }
+}
+
+/* ========== PAPER DECORATION ========== */
+.paper-decoration {
+    position: absolute;
+    bottom: -5px;
+    left: -5px;
+    width: 100px;
+    z-index: 10;
+    transform: translateZ(15px);
+    filter: drop-shadow(2px 4px 8px var(--color-shadow));
+}
+
+/* ========================================
+   TABLET BREAKPOINT (768px+)
+   ======================================== */
+@media (min-width: 768px) {
+    .landing-page {
+        padding: 1.5rem 2rem;
+    }
+
+    .landing-header__logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .landing-header__brand {
+        font-size: 1.1rem;
+    }
+
+    .landing-title-wrapper {
+        margin-left: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .landing-title {
+        font-size: 2.5rem;
+    }
+
+    .landing-button {
+        padding: 0.6rem 2.5rem;
+        font-size: 1rem;
+    }
+
+    .cat-top {
+        top: -15px;
+        right: -20px;
+        width: 200px;
+    }
+
+    .cat-mid {
+        bottom: -10px;
+        right: 18%;
+        width: 180px;
+    }
+
+    .cat-bottom {
+        bottom: -15px;
+        right: -15px;
+        width: 200px;
+    }
+
+    .paper-decoration {
+        width: 140px;
+    }
+}
+
+/* ========================================
+   DESKTOP BREAKPOINT (1024px+)
+   ======================================== */
+@media (min-width: 1024px) {
+    .landing-page {
+        padding: 1.5rem 2.5rem;
+    }
+
+    .landing-title-wrapper {
+        margin-left: 5rem;
+        margin-bottom: 4rem;
+    }
+
+    .landing-title {
+        font-size: 3.2rem;
+        max-width: 500px;
+    }
+
+    .cat-top {
+        top: -20px;
+        right: -30px;
+        width: 260px;
+    }
+
+    .cat-mid {
+        bottom: -20px;
+        right: 20%;
+        width: 220px;
+    }
+
+    .cat-bottom {
+        bottom: -20px;
+        right: -25px;
+        width: 260px;
+    }
+
+    .paper-decoration {
+        width: 180px;
+    }
+}
+
+/* ========================================
+   LARGE DESKTOP (1440px+)
+   ======================================== */
+@media (min-width: 1440px) {
+    .landing-title-wrapper {
+        margin-left: 8rem;
+    }
+
+    .landing-title {
+        font-size: 4rem;
+        max-width: 550px;
+    }
+
+    .cat-top {
+        width: 300px;
+    }
+
+    .cat-mid {
+        width: 260px;
+        right: 22%;
+    }
+
+    .cat-bottom {
+        width: 300px;
+    }
+
+    .paper-decoration {
+        width: 220px;
+    }
+}
