@@ -3,6 +3,14 @@
    Using CSS Variables for Maintainability
    ======================================== */
 
+:root {
+    /* Brand Size Control - change these numbers at the TOP! */
+    --brand-size: 4rem;
+    /* Base font size (mobile) */
+    --logo-size: 80px;
+    /* Base logo size (mobile) */
+}
+
 .landing-page {
     background-color: var(--color-maroon);
     min-height: 100vh;
@@ -26,14 +34,14 @@
 }
 
 .landing-header__logo {
-    width: 36px;
-    height: 36px;
+    width: var(--logo-size);
+    height: var(--logo-size);
     cursor: pointer;
 }
 
 .landing-header__brand {
     color: var(--color-bone);
-    font-size: 1.4rem;
+    font-size: var(--brand-size);
     font-family: var(--font-serif);
     font-weight: bold;
     font-variant-numeric: lining-nums;
@@ -149,17 +157,14 @@
    TABLET BREAKPOINT (768px+)
    ======================================== */
 @media (min-width: 768px) {
+    :root {
+        --brand-size: 4rem;
+        /* Tablet size override */
+        --logo-size: 60px;
+    }
+
     .landing-page {
         padding: 1.5rem 2rem;
-    }
-
-    .landing-header__logo {
-        width: 48px;
-        height: 48px;
-    }
-
-    .landing-header__brand {
-        font-size: 1.6rem;
     }
 
     .landing-title-wrapper {
@@ -203,6 +208,11 @@
    DESKTOP BREAKPOINT (1024px+)
    ======================================== */
 @media (min-width: 1024px) {
+    :root {
+        --brand-size: 2.5rem;
+        /* Desktop size override */
+    }
+
     .landing-page {
         padding: 1.5rem 2.5rem;
     }
@@ -244,6 +254,11 @@
    LARGE DESKTOP (1440px+)
    ======================================== */
 @media (min-width: 1440px) {
+    :root {
+        --brand-size: 2.5rem;
+        /* Wide monitor size override */
+    }
+
     .landing-title-wrapper {
         margin-left: 8rem;
     }

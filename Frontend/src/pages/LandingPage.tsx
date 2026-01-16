@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { HeaderBrand } from '../components/landing/HeaderBrand';
 import './LandingPage.css';
 
 /**
@@ -8,7 +8,6 @@ import './LandingPage.css';
  * Uses CSS classes for truly responsive design with media queries.
  */
 export function LandingPage() {
-    const [logoHovered, setLogoHovered] = useState(false);
 
     const handleStart = () => {
         window.location.href = 'https://google.com';
@@ -24,17 +23,7 @@ export function LandingPage() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 1.5, ease: 'easeOut', delay: 0.1 }}
                 >
-                    <motion.img
-                        src="/assets/icons/logo.png"
-                        alt="Logo"
-                        className="landing-header__logo"
-                        animate={{ rotate: logoHovered ? 360 : 0 }}
-                        transition={{ duration: 0.8, ease: 'easeInOut' }}
-                        onMouseEnter={() => setLogoHovered(true)}
-                        onMouseLeave={() => setLogoHovered(false)}
-                        onAnimationComplete={() => { if (logoHovered) setLogoHovered(false); }}
-                    />
-                    <span className="landing-header__brand">3P-Doodle</span>
+                    <HeaderBrand />
                 </motion.header>
 
                 {/* ========== CONTENT AREA ========== */}
