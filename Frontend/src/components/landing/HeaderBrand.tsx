@@ -7,6 +7,7 @@ export function HeaderBrand() {
             <img
                 src="/assets/icons/logo.png"
                 alt="3P-Doodle Logo"
+                draggable="false"
                 className="landing-header__logo w-12 h-12 cursor-pointer"
             />
             <span
