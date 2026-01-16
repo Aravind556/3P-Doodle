@@ -13,7 +13,7 @@ export function HeaderBrand() {
             <motion.img
                 src="/assets/icons/logo.png"
                 alt="3P-Doodle Logo"
-                className="w-8 h-8 cursor-pointer"
+                className="w-12 h-12 cursor-pointer"
                 animate={{ rotate: isHovered ? 360 : 0 }}
                 transition={{
                     duration: 0.8,
@@ -27,8 +27,12 @@ export function HeaderBrand() {
                 }}
             />
             <span
-                className="text-xl font-medium tracking-wide"
-                style={{ color: 'var(--color-text-cream)' }}
+                className="text-3xl font-bold font-serif tracking-wide"
+                style={{
+                    fontFamily: 'var(--font-serif)',
+                    color: 'var(--color-bone)',
+                    fontVariantNumeric: 'lining-nums'
+                }}
             >
                 3P-Doodle
             </span>

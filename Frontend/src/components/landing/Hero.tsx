@@ -20,8 +20,8 @@ export function Hero({ onStart }: HeroProps) {
             <motion.h1
                 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-tight max-w-md"
                 style={{
-                    fontFamily: 'var(--font-display)',
-                    color: 'var(--color-text-cream)',
+                    fontFamily: 'var(--font-serif)',
+                    color: 'var(--color-bone)',
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}

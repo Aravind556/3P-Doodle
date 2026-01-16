@@ -26,15 +26,17 @@
 }
 
 .landing-header__logo {
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
 }
 
 .landing-header__brand {
     color: var(--color-bone);
-    font-size: 1rem;
+    font-size: 1.4rem;
     font-family: var(--font-serif);
+    font-weight: bold;
+    font-variant-numeric: lining-nums;
 }
 
 /* ========== CONTENT AREA ========== */
@@ -123,11 +125,12 @@
         display: none;
     }
 }
+
 @media (min-width: 1024px) {
     .cat-mid {
         right: 260px;
         bottom: -10px;
-        width: 220px; 
+        width: 220px;
     }
 }
 
@@ -151,12 +154,12 @@
     }
 
     .landing-header__logo {
-        width: 28px;
-        height: 28px;
+        width: 48px;
+        height: 48px;
     }
 
     .landing-header__brand {
-        font-size: 1.1rem;
+        font-size: 1.6rem;
     }
 
     .landing-title-wrapper {
