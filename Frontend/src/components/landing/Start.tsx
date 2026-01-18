@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface StartProps {
@@ -10,21 +11,29 @@ interface StartProps {
  * Can be reused anywhere a login/start action is needed.
  */
 export function Start({ onStart }: StartProps) {
-    const { login } = useAuth();
+    const { user, login } = useAuth();
+    const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleAction = async () => {
         try {
             if (onStart) onStart();
-            await login(); // 🔐 starts Google redirect
+
+            if (user) {
+                // If already logged in, just go to success page
+                navigate('/Home');
+            } else {
+                // Otherwise, start the OAuth flow
+                await login();
+            }
         } catch (err: any) {
-            console.error('Login failed:', err.message);
-            alert('Login failed');
+            console.error('Action failed:', err.message);
+            alert('Action failed');
         }
     };
 
     return (
         <motion.button
-            onClick={handleLogin}
+            onClick={handleAction}
             className="landing-button"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
