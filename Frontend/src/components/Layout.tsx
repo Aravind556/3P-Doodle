@@ -9,7 +9,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-    const { user, logout } = useAuth();
+    //const { user, logout } = useAuth();
 
     return (
         <div style={{ perspective: '1500px', width: '100%', minHeight: '100vh' }}>
@@ -22,14 +22,14 @@ export function Layout({ children }: LayoutProps) {
                     transition={{ duration: 1.5, ease: 'easeOut' }}
                 >
                     <HeaderBrand />
-                    {user && (
+                    {/* {user && (
                         <button
                             onClick={logout}
                             className="logout-button-mini"
                         >
                             Logout
                         </button>
-                    )}
+                    )} */}
                 </motion.header>
 
                 {/* ========== MAIN CONTENT ========== */}
