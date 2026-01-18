@@ -9,11 +9,6 @@ export function AuthSuccess() {
     const [apiResponse, setApiResponse] = useState<string>('Connecting to backend...');
 
     useEffect(() => {
-        // Clean up the URL hash (#) after successful login
-        if (window.location.hash) {
-            window.history.replaceState(null, '', window.location.pathname);
-        }
-
         if (session) {
             fetchBackendData(session.access_token);
         }
