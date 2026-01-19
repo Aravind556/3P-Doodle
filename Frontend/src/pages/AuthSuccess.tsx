@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Layout } from '../components/Layout';
-import './LandingPage.css';
+import './HomePage.css';
 
 export function AuthSuccess() {
     const { session, logout } = useAuth();
-    const [apiResponse, setApiResponse] = useState<string>('Connecting to backend...');
+    const [apiResponse, setApiResponse] = useState<string>('Connecting...');
 
     useEffect(() => {
         if (session) {
@@ -26,34 +25,51 @@ export function AuthSuccess() {
             const text = await res.text();
             setApiResponse(res.ok ? text : `Error: ${res.status}`);
         } catch (err) {
-            setApiResponse('Failed to connect to backend.');
+            setApiResponse(err instanceof Error ? err.message : String(err));
         }
     };
 
     return (
-        <Layout>
+        <div className="home-page-container">
+            {/* Background layers */}
+            <img src="/assets/Home/Left.png" alt="" className="patchwork-left" />
+            <img src="/assets/Home/right-top.png" alt="" className="patchwork-right-top" />
+            <img src="/assets/Home/right-bottom.png" alt="" className="patchwork-right-bottom" />
+
+            {/* Central Panel */}
             <motion.div
-                className="landing-content"
-                initial={{ opacity: 0, y: 20 }}
+                className="central-panel"
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 1, ease: "easeOut" }}
             >
-                <h2>Authentication Successful</h2>
-                <div className="backend-response" style={{ margin: '20px 0', padding: '15px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-                    <strong>Backend Message:</strong> {apiResponse}
+                <div className="central-panel-text">
+                    <div className="line-1">Playground space</div>
+                    <div className="line-2">Make your own stencil</div>
                 </div>
 
-                <p>You have successfully authenticated with Google.</p>
-
-                <motion.button
-                    onClick={logout}
-                    className="landing-button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    Sign Out
-                </motion.button>
+                {/* Subtle Backend Status indicator */}
+                <div className="backend-status-hint">
+                    {apiResponse}
+                </div>
             </motion.div>
-        </Layout>
+
+            {/* Bear Character */}
+            <motion.img
+                src="/assets/Home/bear.png"
+                alt="Bear"
+                className="bear-character"
+                initial={{ x: -100, opacity: 0 }}
+                animate={{ x: 100, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+            />
+
+            <button
+                onClick={logout}
+                className="sign-out-button"
+            >
+                Sign Out
+            </button>
+        </div>
     );
 }
