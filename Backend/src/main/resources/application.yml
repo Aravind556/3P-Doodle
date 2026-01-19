@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: Backend
   datasource:
     url: jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:5432/postgres
     username: ${DB_USERNAME}
