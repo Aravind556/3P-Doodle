@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Itim&family=Outfit:wght@400;600&display=swap');
+
+:root {
+    --home-bg-color: #1a0f0a;
+    --panel-text-color: #4a3728;
+    --font-handwritten: 'Itim', cursive;
+    --font-ui: 'Outfit', sans-serif;
+}
+
+.home-page-container {
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--home-bg-color);
+    background-image: url('/assets/Home/backgroung.png');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin: 0;
+    padding: 2rem;
+}
+
+/* ========== PATCHWORK LAYERS ========== */
+.patchwork-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: auto;
+    z-index: 5;
+    pointer-events: none;
+    user-select: none;
+}
+
+.patchwork-right-column {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: clamp(200px, 18vw, 320px);
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.patchwork-right-top {
+    height: 40%;
+    width: 100%;
+    object-fit: cover;
+    user-select: none;
+}
+
+.patchwork-right-bottom {
+    height: 60%;
+    width: 100%;
+    object-fit: cover;
+    user-select: none;
+}
+
+/* ========== CENTRAL PANEL ========== */
+.central-panel {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 800px;
+    aspect-ratio: 1.6 / 1;
+    background-image: url('/assets/Home/middle-slate.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.central-panel-text {
+    text-align: center;
+    color: var(--panel-text-color);
+    font-family: var(--font-handwritten);
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.line-1 {
+    font-size: clamp(2rem, 8vw, 4.5rem);
+    line-height: 1;
+}
+
+.line-2 {
+    font-size: clamp(1rem, 4vw, 2rem);
+    opacity: 0.85;
+}
+
+.backend-status-hint {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    font-family: var(--font-ui);
+    color: var(--panel-text-color);
+}
+
+/* ========== BEAR CHARACTER ========== */
+.bear-character {
+    position: absolute;
+    bottom: -10px;
+    left: 40px;
+    /* Positioned relative to the viewport edge, overlapping the lace */
+    height: clamp(200px, 40vh, 450px);
+    width: auto;
+    z-index: 20;
+    pointer-events: none;
+    user-select: none;
+    filter: drop-shadow(5px 5px 15px rgba(0, 0, 0, 0.3));
+}
+
+/* ========== UI ELEMENTS ========== */
+.sign-out-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 30px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    z-index: 50;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sign-out-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* ========== RESPONSIVENESS ========== */
+@media (max-width: 768px) {
+    .central-panel {
+        width: 95%;
+        padding: 2rem;
+        aspect-ratio: 1.4 / 1;
+    }
+
+    .bear-character {
+        left: 20px;
+        height: 30vh;
+    }
+
+    .patchwork-right-column {
+        display: none;
+        /* Hide side patches on mobile to focus on the panel */
+    }
+}
+
+@media (max-height: 600px) {
+    .central-panel {
+        padding: 1rem;
+        height: 80vh;
+        width: auto;
+    }
+
+    .bear-character {
+        height: 35vh;
+    }
+}
