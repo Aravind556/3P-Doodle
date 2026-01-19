@@ -18,11 +18,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Clean up URL hash (#) from OAuth redirect immediately
-        if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error'))) {
+        // Only clean up the URL hash AFTER we have confirmed a session is established
+        // This ensures Supabase has time to read the tokens from the URL first
+        if (session && window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error'))) {
             window.history.replaceState(null, '', window.location.pathname);
         }
+    }, [session]);
 
+    useEffect(() => {
         // Check active sessions
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
