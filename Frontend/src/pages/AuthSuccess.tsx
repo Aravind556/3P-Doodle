@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { PopUp } from '../components/pop_up';
 import './HomePage.css';
 
 interface RoomStatus {
@@ -49,7 +50,7 @@ export function AuthSuccess() {
 
     const checkRoomStatus = async () => {
         if (!session) return;
-        
+
         try {
             const res = await fetch(`${apiUrl}/room/status`, {
                 headers: {
@@ -74,7 +75,7 @@ export function AuthSuccess() {
     const createRoom = async () => {
         setLoading(true);
         setError('');
-        
+
         try {
             const res = await fetch(`${apiUrl}/room/create`, {
                 method: 'POST',
@@ -84,7 +85,7 @@ export function AuthSuccess() {
             });
 
             const data = await res.json();
-            
+
             if (res.ok) {
                 setRoomStatus(data);
             } else {
@@ -106,7 +107,7 @@ export function AuthSuccess() {
 
         setLoading(true);
         setError('');
-        
+
         try {
             const res = await fetch(`${apiUrl}/room/join`, {
                 method: 'POST',
@@ -119,7 +120,7 @@ export function AuthSuccess() {
 
             const data = await res.json();
             console.log('Join response:', data); // Debug log
-            
+
             if (res.ok) {
                 setRoomStatus(data);
                 setShowPairedPopup(true);
@@ -182,59 +183,59 @@ export function AuthSuccess() {
                 ) : (
                     <>
                         {roomStatus?.status === 'NO_ROOM' && (
-                    <div className="room-setup">
-                        <h2>Welcome to Doodle!</h2>
-                        <div className="room-actions">
-                            <button 
-                                onClick={createRoom} 
-                                disabled={loading}
-                                className="create-room-btn"
-                            >
-                                {loading ? 'Creating...' : 'Get My Code'}
-                            </button>
-                            
-                            <div className="divider">OR</div>
-                            
-                            <div className="join-room-section">
-                                <input
-                                    type="text"
-                                    placeholder="Enter friend's code"
-                                    value={friendCode}
-                                    onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
-                                    className="room-code-input"
-                                    maxLength={6}
-                                />
-                                <button 
-                                    onClick={joinRoom} 
-                                    disabled={loading || !friendCode.trim()}
-                                    className="join-room-btn"
+                            <div className="room-setup">
+                                <h2>Welcome to Doodle!</h2>
+                                <div className="room-actions">
+                                    <button
+                                        onClick={createRoom}
+                                        disabled={loading}
+                                        className="create-room-btn"
+                                    >
+                                        {loading ? 'Creating...' : 'Get My Code'}
+                                    </button>
+
+                                    <div className="divider">OR</div>
+
+                                    <div className="join-room-section">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter friend's code"
+                                            value={friendCode}
+                                            onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
+                                            className="room-code-input"
+                                            maxLength={6}
+                                        />
+                                        <button
+                                            onClick={joinRoom}
+                                            disabled={loading || !friendCode.trim()}
+                                            className="join-room-btn"
+                                        >
+                                            {loading ? 'Joining...' : 'Join Room'}
+                                        </button>
+                                    </div>
+                                </div>
+                                {error && <p className="error-message">{error}</p>}
+                            </div>
+                        )}
+
+                        {roomStatus?.status === 'WAITING' && (
+                            <div className="waiting-room">
+                                <h2>Your Room Code</h2>
+                                <div className="room-code-display">{roomStatus.code}</div>
+                                <p className="waiting-text">Waiting for friend to join...</p>
+                                <div className="loading-dots">
+                                    <span></span><span></span><span></span>
+                                </div>
+                                <button
+                                    onClick={leaveRoom}
+                                    className="cancel-room-btn"
                                 >
-                                    {loading ? 'Joining...' : 'Join Room'}
+                                    Start Over
                                 </button>
                             </div>
-                        </div>
-                        {error && <p className="error-message">{error}</p>}
-                    </div>
-                )}
+                        )}
 
-                {roomStatus?.status === 'WAITING' && (
-                    <div className="waiting-room">
-                        <h2>Your Room Code</h2>
-                        <div className="room-code-display">{roomStatus.code}</div>
-                        <p className="waiting-text">Waiting for friend to join...</p>
-                        <div className="loading-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <button 
-                            onClick={leaveRoom}
-                            className="cancel-room-btn"
-                        >
-                            Start Over
-                        </button>
-                    </div>
-                )}
-
-                {/* Removed the PAIRED state UI since we auto-redirect to /options */}
+                        {/* Removed the PAIRED state UI since we auto-redirect to /options */}
                     </>
                 )}
             </motion.div>
@@ -242,33 +243,10 @@ export function AuthSuccess() {
             {/* Pairing Success Popup */}
             <AnimatePresence>
                 {showPairedPopup && roomStatus?.status === 'PAIRED' && (
-                    <motion.div
-                        className="pairing-popup-overlay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setShowPairedPopup(false)}
-                    >
-                        <motion.div
-                            className="pairing-popup"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.5, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="popup-icon">🎨</div>
-                            <h2>You're Doodlemates!</h2>
-                            <p className="popup-message">
-                                You and <strong>{roomStatus.partner}</strong> are now connected
-                            </p>
-                            <button 
-                                className="popup-close-btn"
-                                onClick={() => setShowPairedPopup(false)}
-                            >
-                                Let's Doodle!
-                            </button>
-                        </motion.div>
-                    </motion.div>
+                    <PopUp
+                        setShowPairedPopup={setShowPairedPopup}
+                        roomStatus={{ partner: roomStatus.partner }}
+                    />
                 )}
             </AnimatePresence>
 
