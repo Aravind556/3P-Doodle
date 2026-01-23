@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
+
+.pairing-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.pairing-popup-card {
+    background: #850E35;
+    width: 90%;
+    max-width: 440px;
+    padding: 2.5rem 2rem;
+    border-radius: 32px;
+    border: none;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 15px 400px rgba(117, 30, 59, 0.867);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.popup-visuals-container {
+    width: 100%;
+    height: 220px;
+    margin-bottom: 2rem;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.visual-element {
+    position: absolute;
+    object-fit: contain;
+}
+
+.cat-black {
+    z-index: 1;
+    height: 200px;
+    top: -15px;
+    left: 55%;
+    transform: translateX(-50%);
+}
+
+.cat-white {
+    z-index: 2;
+    height: 210px;
+    top: -10px;
+    left: 40%;
+    transform: translateX(-50%);
+}
+
+.palette {
+    z-index: 3;
+    height: 280px;
+    bottom: -125px;
+    left: -2%;
+}
+
+.chalk-box {
+    z-index: 2;
+    height: 170px;
+    bottom: -90px;
+    right: 12%;
+}
+
+.visual-glow {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgb(252, 250, 250) 0%, rgba(255, 145, 126, 0) 70%);
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pairing-popup-card h2 {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 2.3rem;
+    color: #FFFAF4;
+    margin: 0.5rem 0;
+    line-height: 1.2;
+}
+
+.popup-message {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #FFFAF4;
+    opacity: 0.95;
+    margin-bottom: 2rem;
+    line-height: 1.4;
+}
+
+.popup-message strong {
+    color: #c2a4d8;
+    /* Vibrant lime green for the partner name */
+    font-weight: 700;
+}
+
+.lets-doodle-btn {
+    padding: 0.8rem 4rem;
+    font-size: 1.5rem;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    background: #FFFAF4;
+    color: #850E35;
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.lets-doodle-btn:hover {
+    background-color: #FFFAF4;
+    color: #850E35;
+    transform: translateY(-3px) scale(1.12);
+    box-shadow: 0 10px 20px rgba(133, 14, 53, 0.2);
+}
+
+.lets-doodle-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+    .pairing-popup-card {
+        width: 95%;
+        padding: 2rem 1.25rem;
+        border-radius: 24px;
+    }
+
+    .popup-visuals-container {
+        height: 180px;
+        margin-bottom: 3.5rem;
+    }
+
+    .cat-black {
+        height: 160px;
+        top: 0;
+    }
+
+    .cat-white {
+        height: 170px;
+        top: 5px;
+    }
+
+    .palette {
+        height: 220px;
+        bottom: -100px;
+    }
+
+    .chalk-box {
+        height: 140px;
+        bottom: -70px;
+    }
+
+    .pairing-popup-card h2 {
+        font-size: 1.8rem;
+    }
+
+    .popup-message {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .lets-doodle-btn {
+        padding: 0.7rem 3rem;
+        font-size: 1.1rem;
+        border-radius: 14px;
+    }
+}
+
+/* Landscape mode on small screens */
+@media (max-height: 500px) and (orientation: landscape) {
+    .pairing-popup-card {
+        flex-direction: row;
+        max-width: 600px;
+        padding: 1.5rem;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+
+    .popup-visuals-container {
+        width: 40%;
+        height: 140px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .palette {
+        height: 180px;
+        bottom: -80px;
+    }
+
+    .chalk-box {
+        height: 110px;
+        bottom: -50px;
+    }
+
+    .cat-black,
+    .cat-white {
+        height: 130px;
+    }
+
+    .pairing-popup-card h2 {
+        font-size: 1.5rem;
+        text-align: left;
+        margin-top: 0;
+    }
+
+    .popup-message {
+        font-size: 0.9rem;
+        text-align: left;
+        margin-bottom: 1rem;
+    }
+
+    .lets-doodle-btn {
+        padding: 0.6rem 2.5rem;
+        font-size: 1rem;
+    }
+}

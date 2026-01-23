@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Itim&family=Outfit:wght@400;600&display=swap');
+
+.option-screen-container {
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.option-panel {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem;
+    border-radius: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+}
+
+.option-title {
+    font-family: 'Itim', cursive;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    text-align: center;
+    color: #333;
+    margin-bottom: 3rem;
+}
+
+.option-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.option-card {
+    background: white;
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 3px solid transparent;
+}
+
+.option-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+}
+
+.option-card.playground {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 10%, white 10%);
+}
+
+.option-card.stencil {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 10%, white 10%);
+}
+
+.option-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.option-card h2 {
+    font-family: 'Itim', cursive;
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.option-card p {
+    font-size: 1.1rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+.break-link-btn {
+    margin-top: 2.5rem;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+    color: #2d0f0f;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.break-link-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.16);
+}
+
+.top-right-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+}
+
+.top-right-controls .sign-out-button {
+    position: static; /* override absolute from HomePage.css */
+}
+
+.name-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.4);
+    backdrop-filter: blur(6px);
+}
+
+.name-badge.you {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.name-badge.partner {
+    background: linear-gradient(135deg, #ff7eb3, #ff758c);
+}
+
+@media (max-width: 768px) {
+    .option-panel {
+        padding: 2rem;
+    }
+
+    .option-cards {
+        grid-template-columns: 1fr;
+    }
+}

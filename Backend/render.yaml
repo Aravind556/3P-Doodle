@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: doodle-backend
+    runtime: docker
+    dockerContext: Backend
+    dockerfilePath: Dockerfile
+    plan: starter
+    envVars:
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_ISSUER_URI
+        sync: false

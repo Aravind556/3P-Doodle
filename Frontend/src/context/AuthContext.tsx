@@ -47,7 +47,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/Home`
+                redirectTo: `${window.location.origin}/Home`,
+                // Force Google to show account selection screen
+                queryParams: {
+                    prompt: 'select_account'
+                }
             }
         });
         if (error) throw error;
@@ -55,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         await supabase.auth.signOut();
+        // Redirect to home/landing page after logout
+        window.location.href = '/';
     };
 
     return (

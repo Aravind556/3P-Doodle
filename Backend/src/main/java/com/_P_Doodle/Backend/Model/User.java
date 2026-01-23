@@ -1,19 +1,19 @@
 package com._P_Doodle.Backend.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
     private String id;
     private String name;
     private String email;
+    
+    @Column
+    private UUID roomId;
 
 
     public String getId() {
@@ -34,7 +34,11 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-
     
-    
+    public UUID getRoomId() {
+        return roomId;
+    }
+    public void setRoomId(UUID roomId) {
+        this.roomId = roomId;
+    }
 }
