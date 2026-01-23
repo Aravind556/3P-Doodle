@@ -4,11 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import './LandingPage.css';
 
+import { Loading } from '../components/Loading';
+
 export function LandingPage() {
     const { loading } = useAuth();
 
     if (loading) {
-        return <div className="loading-screen">Loading...</div>;
+        return <Loading />;
     }
 
     return (

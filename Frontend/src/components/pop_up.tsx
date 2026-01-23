@@ -35,7 +35,7 @@ export const PopUp: React.FC<PopUpProps> = ({ setShowPairedPopup, roomStatus }) 
                         initial={{ x: "-100%", opacity: 0 }}
                         animate={{ x: "-50%", opacity: 1 }}
                         transition={{
-                            duration: 1.5,
+                            duration: 2.5,
                             ease: "easeOut",
                             delay: 0.2
                         }}

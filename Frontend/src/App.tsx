@@ -4,9 +4,11 @@ import { AuthSuccess } from './pages/AuthSuccess';
 import { OptionScreen } from './pages/OptionScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+import { Loading } from './components/Loading';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loading />;
   if (!user) return <Navigate to="/" />;
   return <>{children}</>;
 };

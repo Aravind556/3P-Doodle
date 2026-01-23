@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PopUp } from '../components/pop_up';
+import { Loading } from '../components/Loading';
 import './HomePage.css';
 
 interface RoomStatus {
@@ -176,11 +177,9 @@ export function AuthSuccess() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: "easeOut" }}
             >
-                {initialLoading ? (
-                    <div className="loading-initial">
-                        <p>Loading...</p>
-                    </div>
-                ) : (
+                {(initialLoading || loading) && <Loading />}
+
+                {!(initialLoading || loading) && (
                     <>
                         {roomStatus?.status === 'NO_ROOM' && (
                             <div className="room-setup">
