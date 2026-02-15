@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './OptionScreen.css';
-import './HomePage.css'; // For sign-out button styles
+import './HomePage.css';
 
 export function OptionScreen() {
     const navigate = useNavigate();
@@ -11,6 +11,9 @@ export function OptionScreen() {
 
     const [partnerName, setPartnerName] = useState<string>('');
     const [partnerEmail, setPartnerEmail] = useState<string>('');
+    const [menuOpen, setMenuOpen] = useState<boolean>(false);
+    const [showUserName, setShowUserName] = useState<boolean>(false);
+    const [showPartnerName, setShowPartnerName] = useState<boolean>(false);
     const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080';
 
     const myName = useMemo(() => {
@@ -84,48 +87,163 @@ export function OptionScreen() {
         }
     };
 
+    const handleMenuItemClick = (action: 'logout' | 'breaklink') => {
+        setMenuOpen(false);
+        if (action === 'logout') {
+            logout();
+        } else if (action === 'breaklink') {
+            breakLink();
+        }
+    };
+
     return (
         <div className="option-screen-container">
-            <div className="top-right-controls">
-                <span className="name-badge you" title={user?.email || ''}>{myName}</span>
-                <span className="name-badge partner" title={partnerEmail || ''}>{partnerName || 'Partner'}</span>
-                <button onClick={logout} className="sign-out-button">Sign Out</button>
+            <div className="top-right-buttons">
+                <motion.img
+                    src="/assets/optional_page/yellowbut.png"
+                    alt="user button"
+                    className="top-button yellow-btn"
+                    onClick={() => setShowUserName(!showUserName)}
+                />
+                {showUserName && (
+                    <motion.div
+                        className="name-tooltip user-tooltip"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {myName}
+                    </motion.div>
+                )}
+                <motion.img
+                    src="/assets/optional_page/greenbut.png"
+                    alt="partner button"
+                    className="top-button green-btn"
+                    onClick={() => setShowPartnerName(!showPartnerName)}
+                />
+                {showPartnerName && (
+                    <motion.div
+                        className="name-tooltip partner-tooltip"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {partnerName || 'Partner'}
+                    </motion.div>
+                )}
             </div>
             <motion.div
-                className="option-panel"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
+                className="top-left-section"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
             >
-                <h1 className="option-title">Choose Your Mode</h1>
-                
-                <div className="option-cards">
-                    <motion.div
-                        className="option-card playground"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/playground')}
+                <motion.h2
+                    className="mode-title"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.1 }}
+                >
+                    Playground Space
+                </motion.h2>
+                <motion.p
+                    className="mode-description"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                    Free drawing <br/> with your Doodlemates
+                </motion.p>
+                <motion.button
+                    className="lets-doodle-btn"
+                    onClick={() => navigate('/playground')}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    Let's Doodle
+                </motion.button>
+            </motion.div>
+            <motion.div
+                className="top-right-section"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+                <motion.h2
+                    className="mode-title"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.1 }}
+                >
+                    Make your <br /> own Stencil
+                </motion.h2>
+                <motion.p
+                    className="mode-description"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                    create custom <br /> templates together
+                </motion.p>
+                <motion.button
+                    className="lets-doodle-btn"
+                    onClick={() => navigate('/stencil')}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    Let's Doodle
+                </motion.button>
+            </motion.div>
+            <motion.img
+                src="/assets/optional_page/redbut.png"
+                alt="menu button"
+                className="corner-decoration"
+                onClick={() => setMenuOpen(!menuOpen)}
+            />
+            {menuOpen && (
+                <motion.div
+                    className="corner-menu"
+                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <button
+                        className="menu-item"
+                        onClick={() => handleMenuItemClick('logout')}
                     >
-                        <div className="option-icon">🎨</div>
-                        <h2>Playground Space</h2>
-                        <p>Free drawing with your doodlemate</p>
-                    </motion.div>
-
-                    <motion.div
-                        className="option-card stencil"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/stencil')}
+                        Sign Out
+                    </button>
+                    <button
+                        className="menu-item"
+                        onClick={() => handleMenuItemClick('breaklink')}
                     >
-                        <div className="option-icon">📝</div>
-                        <h2>Make Your Own Stencil</h2>
-                        <p>Create custom templates together</p>
-                    </motion.div>
-                </div>
-
-                <button className="break-link-btn" onClick={breakLink}>
-                    Break Link & Return Home
-                </button>
+                        Break Link
+                    </button>
+                </motion.div>
+            )}
+            <motion.div
+                className="cat-left white-cat"
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+            >
+                <img src="/assets/optional_page/whitecat.png" alt="white cat" />
+            </motion.div>
+            <motion.div
+                className="cat-right black-cat"
+                initial={{ opacity: 0, y: -100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+                style={{ transform: 'scale(0.5) scaleX(-1)' }}
+            >
+                <img src="/assets/optional_page/blackcat.png" alt="black cat" />
             </motion.div>
         </div>
     );
