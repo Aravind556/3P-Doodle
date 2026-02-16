@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { PopUp } from '../components/pop_up';
 import { Loading } from '../components/Loading';
+import { HomeBackground } from '../components/StaticLayers';
 
 import './HomePage.css';
 
@@ -20,6 +21,7 @@ export function AuthSuccess() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPairedPopup, setShowPairedPopup] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(true);
     const [imagesLoaded, setImagesLoaded] = useState(false);
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -52,8 +54,44 @@ export function AuthSuccess() {
         });
     }, []);
 
+    const checkRoomStatus = async () => {
+        if (!session) return;
 
+        try {
+            const res = await fetch(`${apiUrl}/room/status`, {
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                },
+            });
 
+            if (res.ok) {
+                const data = await res.json();
+                // Deep comparison to prevent re-renders if status hasn't changed
+                setRoomStatus(prev => {
+                    if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+                    return data;
+                });
+            } else {
+                console.error('Status check failed:', res.status, await res.text());
+                // If call fails (e.g. 401, 500, or 404), ensure we default to NO_ROOM so the UI shows something
+                setRoomStatus(prev => prev || { status: 'NO_ROOM' });
+            }
+        } catch (err) {
+            console.error('Failed to check room status', err);
+            // On network error, also default to NO_ROOM
+            setRoomStatus(prev => prev || { status: 'NO_ROOM' });
+        } finally {
+            setInitialLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (session) {
+            checkRoomStatus();
+        } else {
+            setInitialLoading(false);
+        }
+    }, [session]);
     const createRoom = async () => {
         setLoading(true);
         setError('');
@@ -145,15 +183,11 @@ export function AuthSuccess() {
     return (
         <div className="home-page-container">
             {/* Background layers - Always render to maintain context */}
-            <img src="/assets/Home/Left.png" alt="" className="patchwork-left" />
-            <div className="patchwork-right">
-                <img src="/assets/Home/right-top.png" alt="" className="patchwork-right-top" />
-                <img src="/assets/Home/right-bottom.png" alt="" className="patchwork-right-bottom" />
-            </div>
+            <HomeBackground />
 
             {/* Loading Overlay - Rendered at root level with high Z-index */}
             <AnimatePresence mode="wait">
-                {(loading || !imagesLoaded) && (
+                {(initialLoading || loading || !imagesLoaded) && (
                     <motion.div
                         key="loading-screen"
                         initial={{ opacity: 1 }}
@@ -167,7 +201,7 @@ export function AuthSuccess() {
             </AnimatePresence>
 
             {/* Main Content - Only render and animate when ready */}
-            {!(loading || !imagesLoaded) && (
+            {!(initialLoading || loading || !imagesLoaded) && (
                 <>
                     {/* Central Panel */}
                     <motion.div
