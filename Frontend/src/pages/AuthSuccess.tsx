@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PopUp } from '../components/pop_up';
 import { Loading } from '../components/Loading';
+import { HomeBackground } from '../components/StaticLayers';
 import './HomePage.css';
 
 interface RoomStatus {
@@ -22,32 +23,37 @@ export function AuthSuccess() {
     const [showPairedPopup, setShowPairedPopup] = useState(false);
     const [hasShownPopup, setHasShownPopup] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
-
-    useEffect(() => {
-        if (session) {
-            checkRoomStatus();
-            // Poll every 3 seconds for updates
-            const interval = setInterval(checkRoomStatus, 3000);
-            return () => clearInterval(interval);
-        }
-    }, [session]);
-
-    useEffect(() => {
-        if (roomStatus?.status === 'PAIRED' && !hasShownPopup) {
-            setShowPairedPopup(true);
-            setHasShownPopup(true);
-        }
-    }, [roomStatus, hasShownPopup]);
-
-    // Auto-redirect if already paired
-    useEffect(() => {
-        if (roomStatus?.status === 'PAIRED' && !showPairedPopup) {
-            // User is already paired, skip to options screen
-            navigate('/options');
-        }
-    }, [roomStatus, showPairedPopup, navigate]);
-
+    const [imagesLoaded, setImagesLoaded] = useState(false);
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
+    // Preload critical images to prevent stutter
+    useEffect(() => {
+        const imageUrls = [
+            '/assets/Home/backgroung.png',
+            '/assets/Home/middle-slate.png',
+            '/assets/Home/bear.png',
+            '/assets/Home/Left.png',
+            '/assets/Home/right-top.png',
+            '/assets/Home/right-bottom.png'
+        ];
+
+        let loadedCount = 0;
+        const total = imageUrls.length;
+
+        const handleImageLoad = () => {
+            loadedCount++;
+            if (loadedCount >= total) {
+                setImagesLoaded(true);
+            }
+        };
+
+        imageUrls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+            img.onload = handleImageLoad;
+            img.onerror = handleImageLoad;
+        });
+    }, []);
 
     const checkRoomStatus = async () => {
         if (!session) return;
@@ -61,8 +67,11 @@ export function AuthSuccess() {
 
             if (res.ok) {
                 const data = await res.json();
-                console.log('Room status:', data); // Debug log
-                setRoomStatus(data);
+                // Deep comparison to prevent re-renders if status hasn't changed
+                setRoomStatus(prev => {
+                    if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+                    return data;
+                });
             } else {
                 console.error('Status check failed:', res.status, await res.text());
             }
@@ -163,24 +172,38 @@ export function AuthSuccess() {
 
     return (
         <div className="home-page-container">
-            {/* Background layers */}
+            {/* Background layers - Always render to maintain context */}
             <img src="/assets/Home/Left.png" alt="" className="patchwork-left" />
             <div className="patchwork-right">
                 <img src="/assets/Home/right-top.png" alt="" className="patchwork-right-top" />
                 <img src="/assets/Home/right-bottom.png" alt="" className="patchwork-right-bottom" />
             </div>
 
-            {/* Central Panel */}
-            <motion.div
-                className="central-panel"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-            >
-                {(initialLoading || loading) && <Loading />}
+            {/* Loading Overlay - Rendered at root level with high Z-index */}
+            <AnimatePresence mode="wait">
+                {(initialLoading || loading || !imagesLoaded) && (
+                    <motion.div
+                        key="loading-screen"
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="fixed inset-0 z-[100]" // Ensure it's on top of everything
+                    >
+                        <Loading />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                {!(initialLoading || loading) && (
-                    <>
+            {/* Main Content - Only render and animate when ready */}
+            {!(initialLoading || loading || !imagesLoaded) && (
+                <>
+                    {/* Central Panel */}
+                    <motion.div
+                        className="central-panel"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} // Slight delay after loader fades
+                    >
                         {roomStatus?.status === 'NO_ROOM' && (
                             <div className="room-setup">
                                 <h2>Welcome to Doodle!</h2>
@@ -233,38 +256,37 @@ export function AuthSuccess() {
                                 </button>
                             </div>
                         )}
+                        {/* PAIRED state auto-redirects, no UI needed here */}
+                    </motion.div>
 
-                        {/* Removed the PAIRED state UI since we auto-redirect to /options */}
-                    </>
-                )}
-            </motion.div>
+                    {/* Pairing Success Popup */}
+                    <AnimatePresence>
+                        {showPairedPopup && roomStatus?.status === 'PAIRED' && (
+                            <PopUp
+                                setShowPairedPopup={setShowPairedPopup}
+                                roomStatus={{ partner: roomStatus.partner }}
+                            />
+                        )}
+                    </AnimatePresence>
 
-            {/* Pairing Success Popup */}
-            <AnimatePresence>
-                {showPairedPopup && roomStatus?.status === 'PAIRED' && (
-                    <PopUp
-                        setShowPairedPopup={setShowPairedPopup}
-                        roomStatus={{ partner: roomStatus.partner }}
+                    {/* Bear Character */}
+                    <motion.img
+                        src="/assets/Home/bear.png"
+                        alt="Bear"
+                        className="bear-character"
+                        initial={{ x: -100, opacity: 0 }}
+                        animate={{ x: 100, opacity: 1 }}
+                        transition={{ delay: 0.6, duration: 0.8, ease: "backOut" }} // Staggered after panel
                     />
-                )}
-            </AnimatePresence>
 
-            {/* Bear Character */}
-            <motion.img
-                src="/assets/Home/bear.png"
-                alt="Bear"
-                className="bear-character"
-                initial={{ x: -100, opacity: 0 }}
-                animate={{ x: 100, opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-            />
-
-            <button
-                onClick={logout}
-                className="sign-out-button"
-            >
-                Sign Out
-            </button>
+                    <button
+                        onClick={logout}
+                        className="sign-out-button"
+                    >
+                        Sign Out
+                    </button>
+                </>
+            )}
         </div>
     );
 }

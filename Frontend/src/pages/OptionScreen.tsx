@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './OptionScreen.css';
 import './HomePage.css';
+import { Loading } from '../components/Loading';
 
 export function OptionScreen() {
     const navigate = useNavigate();
@@ -13,6 +14,9 @@ export function OptionScreen() {
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [showUserName, setShowUserName] = useState<boolean>(false);
     const [showPartnerName, setShowPartnerName] = useState<boolean>(false);
+
+    // Loading states
+    const [imagesLoaded, setImagesLoaded] = useState(false);
     const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080';
 
     const myName = useMemo(() => {
@@ -24,6 +28,35 @@ export function OptionScreen() {
             'You'
         );
     }, [user]);
+
+    // Preload images
+    useEffect(() => {
+        const imageUrls = [
+            '/assets/optional_page/bluebg.png',
+            '/assets/optional_page/yellowbut.png',
+            '/assets/optional_page/greenbut.png',
+            '/assets/optional_page/redbut.png',
+            '/assets/optional_page/whitecat.png',
+            '/assets/optional_page/blackcat.png'
+        ];
+
+        let loadedCount = 0;
+        const total = imageUrls.length;
+
+        const handleImageLoad = () => {
+            loadedCount++;
+            if (loadedCount >= total) {
+                setImagesLoaded(true);
+            }
+        };
+
+        imageUrls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+            img.onload = handleImageLoad;
+            img.onerror = handleImageLoad;
+        });
+    }, []);
 
     useEffect(() => {
         let interval: number | undefined;
@@ -94,6 +127,10 @@ export function OptionScreen() {
         }
     };
 
+    if (!imagesLoaded) {
+        return <Loading />;
+    }
+
     return (
         <div className="option-screen-container">
             <div className="top-right-buttons">
@@ -150,7 +187,7 @@ export function OptionScreen() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                 >
-                    Free drawing <br/> with your Doodlemates
+                    Free drawing <br /> with your Doodlemates
                 </motion.p>
                 <motion.button
                     className="lets-doodle-btn"
