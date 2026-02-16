@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import { PopUp } from '../components/pop_up';
@@ -16,6 +17,7 @@ interface RoomStatus {
 
 export function AuthSuccess() {
     const { session, logout } = useAuth();
+    const navigate = useNavigate();
     const [roomStatus, setRoomStatus] = useState<RoomStatus | null>(null);
     const [friendCode, setFriendCode] = useState('');
     const [error, setError] = useState('');
@@ -92,6 +94,18 @@ export function AuthSuccess() {
             setInitialLoading(false);
         }
     }, [session]);
+
+    // Handle navigation when paired (if popup is not shown or closed)
+    useEffect(() => {
+        if (roomStatus?.status === 'PAIRED' && !showPairedPopup) {
+            // Navigate to option screen
+            // Using a small timeout to allow state to settle or animations to finish
+            const timer = setTimeout(() => {
+                navigate('/options');
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [roomStatus, showPairedPopup, navigate]);
     const createRoom = async () => {
         setLoading(true);
         setError('');
@@ -269,7 +283,12 @@ export function AuthSuccess() {
                     <AnimatePresence>
                         {showPairedPopup && roomStatus?.status === 'PAIRED' && (
                             <PopUp
-                                setShowPairedPopup={setShowPairedPopup}
+                                setShowPairedPopup={(show) => {
+                                    setShowPairedPopup(show);
+                                    if (!show) {
+                                        navigate('/options');
+                                    }
+                                }}
                                 roomStatus={{ partner: roomStatus.partner }}
                             />
                         )}
