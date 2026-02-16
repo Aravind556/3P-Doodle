@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import { PopUp } from '../components/pop_up';
 import { Loading } from '../components/Loading';
-import { HomeBackground } from '../components/StaticLayers';
+
 import './HomePage.css';
 
 interface RoomStatus {
@@ -15,14 +15,11 @@ interface RoomStatus {
 
 export function AuthSuccess() {
     const { session, logout } = useAuth();
-    const navigate = useNavigate();
     const [roomStatus, setRoomStatus] = useState<RoomStatus | null>(null);
     const [friendCode, setFriendCode] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPairedPopup, setShowPairedPopup] = useState(false);
-    const [hasShownPopup, setHasShownPopup] = useState(false);
-    const [initialLoading, setInitialLoading] = useState(true);
     const [imagesLoaded, setImagesLoaded] = useState(false);
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -55,32 +52,7 @@ export function AuthSuccess() {
         });
     }, []);
 
-    const checkRoomStatus = async () => {
-        if (!session) return;
 
-        try {
-            const res = await fetch(`${apiUrl}/room/status`, {
-                headers: {
-                    Authorization: `Bearer ${session.access_token}`,
-                },
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                // Deep comparison to prevent re-renders if status hasn't changed
-                setRoomStatus(prev => {
-                    if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
-                    return data;
-                });
-            } else {
-                console.error('Status check failed:', res.status, await res.text());
-            }
-        } catch (err) {
-            console.error('Failed to check room status', err);
-        } finally {
-            setInitialLoading(false);
-        }
-    };
 
     const createRoom = async () => {
         setLoading(true);
@@ -181,7 +153,7 @@ export function AuthSuccess() {
 
             {/* Loading Overlay - Rendered at root level with high Z-index */}
             <AnimatePresence mode="wait">
-                {(initialLoading || loading || !imagesLoaded) && (
+                {(loading || !imagesLoaded) && (
                     <motion.div
                         key="loading-screen"
                         initial={{ opacity: 1 }}
@@ -195,7 +167,7 @@ export function AuthSuccess() {
             </AnimatePresence>
 
             {/* Main Content - Only render and animate when ready */}
-            {!(initialLoading || loading || !imagesLoaded) && (
+            {!(loading || !imagesLoaded) && (
                 <>
                     {/* Central Panel */}
                     <motion.div
