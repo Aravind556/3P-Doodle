@@ -17,8 +17,7 @@ export function OptionScreen() {
 
     // Loading states
     const [imagesLoaded, setImagesLoaded] = useState(false);
-    //(import.meta as any).env?.VITE_API_URL ||
-    const apiUrl = 'http://localhost:8080';
+    const apiUrl = (import.meta as any).env?.VITE_API_URL ||'http://localhost:8080';
 
     const myName = useMemo(() => {
         const meta: any = user?.user_metadata || {};
