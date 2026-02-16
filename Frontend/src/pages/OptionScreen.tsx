@@ -10,7 +10,6 @@ export function OptionScreen() {
     const { logout, user, session } = useAuth();
 
     const [partnerName, setPartnerName] = useState<string>('');
-    const [partnerEmail, setPartnerEmail] = useState<string>('');
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [showUserName, setShowUserName] = useState<boolean>(false);
     const [showPartnerName, setShowPartnerName] = useState<boolean>(false);
@@ -40,9 +39,8 @@ export function OptionScreen() {
                     const data = await res.json();
                     if (data.status === 'PAIRED') {
                         if (data.partner) setPartnerName(data.partner);
-                        if (data.partnerEmail) setPartnerEmail(data.partnerEmail);
-                        // Stop polling once we have both values
-                        if (data.partner && data.partnerEmail) {
+                        // Stop polling once we have partner value
+                        if (data.partner) {
                             if (interval) window.clearInterval(interval);
                         }
                     } else if (res.status === 401) {
