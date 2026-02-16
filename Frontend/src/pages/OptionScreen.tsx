@@ -17,7 +17,7 @@ export function OptionScreen() {
 
     // Loading states
     const [imagesLoaded, setImagesLoaded] = useState(false);
-    const apiUrl = (import.meta as any).env?.VITE_API_URL ||'http://localhost:8080';
+    const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080';
 
     const myName = useMemo(() => {
         const meta: any = user?.user_metadata || {};
@@ -70,12 +70,14 @@ export function OptionScreen() {
                 });
                 if (res.ok) {
                     const data = await res.json();
+
                     if (data.status === 'PAIRED') {
                         if (data.partner) setPartnerName(data.partner);
-                        // Stop polling once we have partner value
-                        if (data.partner) {
-                            if (interval) window.clearInterval(interval);
-                        }
+                        // DO NOT stop polling, or we won't know if the partner leaves!
+                    } else if (data.status === 'NO_ROOM' || data.status === 'WAITING') {
+                        // If link broken then go back home
+                        if (interval) window.clearInterval(interval);
+                        navigate('/Home');
                     } else if (res.status === 401) {
                         // Session expired or missing; stop polling and surface via logout
                         if (interval) window.clearInterval(interval);
