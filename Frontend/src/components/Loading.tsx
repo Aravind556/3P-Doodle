@@ -19,7 +19,7 @@ export const Loading: React.FC = () => {
                         alt="Loading..."
                         draggable={false}
                         className="w-32 h-32 object-contain animate-spin will-change-transform"
-                        style={{ animationDuration: '3s' }}
+                        style={{ animationDuration: '3s', animationDirection: 'reverse' }}
                     />
                 </div>
             </div>

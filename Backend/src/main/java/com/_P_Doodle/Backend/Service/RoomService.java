@@ -152,6 +152,7 @@ public class RoomService {
 
         Room room = roomOpt.get();
         response.put("code", room.getRoomCode());
+        response.put("roomCode", room.getRoomCode()); // Add roomCode field for consistency
         
         if (room.getIsLocked()) {
             response.put("status", "PAIRED");

@@ -7,6 +7,7 @@ import { Loading } from './components/Loading';
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
 const AuthSuccess = lazy(() => import('./pages/AuthSuccess').then(module => ({ default: module.AuthSuccess })));
 const OptionScreen = lazy(() => import('./pages/OptionScreen').then(module => ({ default: module.OptionScreen })));
+const PlaygroundPage = lazy(() => import('./pages/PlaygroundPage').then(module => ({ default: module.PlaygroundPage })));
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -35,6 +36,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OptionScreen />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/playground"
+              element={
+                <ProtectedRoute>
+                  <PlaygroundPage />
                 </ProtectedRoute>
               }
             />
