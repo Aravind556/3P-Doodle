@@ -44,7 +44,7 @@ public class SecurityConfig {
         // Allow Authorization header
         configuration.setAllowedHeaders(List.of("*"));
 
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // Actually register directly:
