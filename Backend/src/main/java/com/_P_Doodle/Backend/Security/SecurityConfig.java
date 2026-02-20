@@ -16,18 +16,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(
-                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/Home/**").authenticated()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
-                }))
-                .build();
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(
+                    org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/Home/**").authenticated()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
+                .anyRequest().authenticated())
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
+            }))
+            .build();
     }
 
     @Bean

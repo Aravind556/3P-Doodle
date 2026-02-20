@@ -5,4 +5,8 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: {
+    // Fix for sockjs-client: define global as globalThis
+    global: 'globalThis',
+  },
 })
