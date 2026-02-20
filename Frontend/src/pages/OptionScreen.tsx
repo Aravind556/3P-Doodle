@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './OptionScreen.css';
 import './HomePage.css';
+import { Loading } from '../components/Loading';
 
 export function OptionScreen() {
     const navigate = useNavigate();
@@ -13,6 +14,9 @@ export function OptionScreen() {
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [showUserName, setShowUserName] = useState<boolean>(false);
     const [showPartnerName, setShowPartnerName] = useState<boolean>(false);
+
+    // Loading states
+    const [imagesLoaded, setImagesLoaded] = useState(false);
     const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080';
 
     const myName = useMemo(() => {
@@ -24,6 +28,35 @@ export function OptionScreen() {
             'You'
         );
     }, [user]);
+
+    // Preload images
+    useEffect(() => {
+        const imageUrls = [
+            '/assets/optional_page/bluebg.png',
+            '/assets/optional_page/yellowbut.png',
+            '/assets/optional_page/greenbut.png',
+            '/assets/optional_page/redbut.png',
+            '/assets/optional_page/whitecat.png',
+            '/assets/optional_page/blackcat.png'
+        ];
+
+        let loadedCount = 0;
+        const total = imageUrls.length;
+
+        const handleImageLoad = () => {
+            loadedCount++;
+            if (loadedCount >= total) {
+                setImagesLoaded(true);
+            }
+        };
+
+        imageUrls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+            img.onload = handleImageLoad;
+            img.onerror = handleImageLoad;
+        });
+    }, []);
 
     useEffect(() => {
         let interval: number | undefined;
@@ -37,12 +70,14 @@ export function OptionScreen() {
                 });
                 if (res.ok) {
                     const data = await res.json();
+
                     if (data.status === 'PAIRED') {
                         if (data.partner) setPartnerName(data.partner);
-                        // Stop polling once we have partner value
-                        if (data.partner) {
-                            if (interval) window.clearInterval(interval);
-                        }
+                        // DO NOT stop polling, or we won't know if the partner leaves!
+                    } else if (data.status === 'NO_ROOM' || data.status === 'WAITING') {
+                        // If link broken then go back home
+                        if (interval) window.clearInterval(interval);
+                        navigate('/Home');
                     } else if (res.status === 401) {
                         // Session expired or missing; stop polling and surface via logout
                         if (interval) window.clearInterval(interval);
@@ -93,6 +128,10 @@ export function OptionScreen() {
             breakLink();
         }
     };
+
+    if (!imagesLoaded) {
+        return <Loading />;
+    }
 
     return (
         <div className="option-screen-container">
@@ -150,7 +189,7 @@ export function OptionScreen() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                 >
-                    Free drawing <br/> with your Doodlemates
+                    Free drawing <br /> with your Doodlemates
                 </motion.p>
                 <motion.button
                     className="lets-doodle-btn"

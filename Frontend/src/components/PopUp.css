@@ -15,7 +15,11 @@
 }
 
 .pairing-popup-card {
-    background: #850E35;
+    /*background: #850E35;*/
+    background-image: 
+    linear-gradient(rgba(81, 25, 25, 0.549), rgba(77, 23, 23, 0.3)),url('/assets/PopUp/background.png');
+    background-size: cover;
+    background-position: center;
     width: 90%;
     max-width: 440px;
     padding: 2.5rem 2rem;
@@ -23,7 +27,12 @@
     border: none;
     text-align: center;
     position: relative;
-    box-shadow: 0 15px 400px rgba(117, 30, 59, 0.867);
+    box-shadow:
+        0 25px 60px rgba(63, 10, 10, 0.35),   /* main drop shadow */
+        0 8px 15px rgba(117, 14, 14, 0.2),     /* closer contact shadow */
+        inset 0 1px 0 rgba(250, 245, 245, 0.279); /* top highlight */
+
+    border: 1px solid rgba(255,255,255,0.15);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -126,7 +135,7 @@
 
 .lets-doodle-btn:hover {
     background-color: #FFFAF4;
-    color: #850E35;
+    color: #4d1628;
     transform: translateY(-3px) scale(1.12);
     box-shadow: 0 10px 20px rgba(133, 14, 53, 0.2);
 }
