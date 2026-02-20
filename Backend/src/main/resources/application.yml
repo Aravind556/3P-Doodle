@@ -3,8 +3,8 @@ spring:
     name: Backend
   datasource:
     url: jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:5432/postgres
-    username: postgres.gzzvfdunrzhfmjunehpt
-    password: Akshita2004*
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,7 +19,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://gzzvfdunrzhfmjunehpt.supabase.co/auth/v1
+          issuer-uri: https://${DB_ISSUER_URI}.supabase.co/auth/v1
 logging:
   level:
     org.springframework.security: DEBUG
