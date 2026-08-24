@@ -10,6 +10,7 @@ spring:
       maximum-pool-size: 8
       idle-timeout: 300000
       max-lifetime: 1800000
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
