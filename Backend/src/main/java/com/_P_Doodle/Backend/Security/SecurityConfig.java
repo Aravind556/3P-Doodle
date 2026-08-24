@@ -23,7 +23,7 @@ public class SecurityConfig {
                     org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/Home/**").authenticated()
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**","/health").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {

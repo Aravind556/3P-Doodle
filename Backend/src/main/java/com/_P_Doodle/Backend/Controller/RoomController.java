@@ -16,11 +16,13 @@ import java.util.concurrent.CompletableFuture;
 @CrossOrigin(origins = "*")
 public class RoomController {
 
-    @Autowired
-    private RoomService roomService;
-
-    @Autowired
-    private UserService userService;
+    private final RoomService roomService;
+    private final UserService userService;
+    
+    public RoomController(RoomService roomService, UserService userService) {
+        this.roomService = roomService;
+        this.userService = userService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@AuthenticationPrincipal Jwt jwt) {

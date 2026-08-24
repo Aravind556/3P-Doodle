@@ -7,13 +7,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
-@RequestMapping("/Home")
+@RequestMapping("/health")
 public class Test {
 
-    @GetMapping("/")
-    public String Authentication() {
-        return "Authenticated Successfully";
+    @GetMapping
+    public String healthCheck() {
+        return "Health Check Passed";
     }
 
 }
