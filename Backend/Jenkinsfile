@@ -1,0 +1,483 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['DEPLOY', 'ROLLBACK'],
+            description: 'Deploy the current commit or rollback to a previous commit.'
+        )
+
+        string(
+            name: 'ROLLBACK_COMMIT',
+            defaultValue: '',
+            description: 'Commit SHA to rollback to. Required only for ROLLBACK.'
+        )
+    }
+
+    environment {
+        IMAGE_NAME = 'ghcr.io/Aravind556/3p-doodle-backend'
+
+        BLUE_PORT = '8080'
+        GREEN_PORT = '8082'
+
+        BLUE_CONTAINER = '3p-doodle-blue'
+        GREEN_CONTAINER = '3p-doodle-green'
+
+        ENV_CREDENTIAL = '3p-doodle-env'
+        GHCR_CREDENTIAL = 'ghcr-credentials'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                sh '''
+                    docker build \
+                        -t ${IMAGE_NAME}:${GIT_COMMIT} \
+                        .
+                '''
+            }
+        }
+
+        stage('Login to GHCR') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "${GHCR_CREDENTIAL}",
+                        usernameVariable: 'GHCR_USERNAME',
+                        passwordVariable: 'GHCR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        echo "$GHCR_TOKEN" | docker login ghcr.io \
+                            -u "$GHCR_USERNAME" \
+                            --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push Image to GHCR') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                sh '''
+                    docker push ${IMAGE_NAME}:${GIT_COMMIT}
+                '''
+            }
+        }
+
+        stage('Determine Deployment Slot') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                script {
+
+                    def blueRunning = sh(
+                        script: """
+                            docker ps \
+                            --filter "name=^${BLUE_CONTAINER}\$" \
+                            --format "{{.Names}}"
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    def greenRunning = sh(
+                        script: """
+                            docker ps \
+                            --filter "name=^${GREEN_CONTAINER}\$" \
+                            --format "{{.Names}}"
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    if (blueRunning) {
+
+                        env.ACTIVE_SLOT = 'BLUE'
+                        env.NEW_SLOT = 'GREEN'
+                        env.NEW_PORT = env.GREEN_PORT
+                        env.NEW_CONTAINER = env.GREEN_CONTAINER
+                        env.OLD_CONTAINER = env.BLUE_CONTAINER
+
+                    } else if (greenRunning) {
+
+                        env.ACTIVE_SLOT = 'GREEN'
+                        env.NEW_SLOT = 'BLUE'
+                        env.NEW_PORT = env.BLUE_PORT
+                        env.NEW_CONTAINER = env.BLUE_CONTAINER
+                        env.OLD_CONTAINER = env.GREEN_CONTAINER
+
+                    } else {
+
+                        env.ACTIVE_SLOT = 'NONE'
+                        env.NEW_SLOT = 'BLUE'
+                        env.NEW_PORT = env.BLUE_PORT
+                        env.NEW_CONTAINER = env.BLUE_CONTAINER
+                        env.OLD_CONTAINER = ''
+                    }
+
+                    echo "Active slot: ${env.ACTIVE_SLOT}"
+                    echo "Deploying to: ${env.NEW_SLOT}"
+                    echo "Port: ${env.NEW_PORT}"
+                }
+            }
+        }
+
+        stage('Pull Deployment Image') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                sh '''
+                    docker pull ${IMAGE_NAME}:${GIT_COMMIT}
+                '''
+            }
+        }
+
+        stage('Start New Container') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: "${ENV_CREDENTIAL}",
+                        variable: 'ENV_FILE'
+                    )
+                ]) {
+                    sh '''
+                        docker rm -f ${NEW_CONTAINER} 2>/dev/null || true
+
+                        docker run -d \
+                            --name ${NEW_CONTAINER} \
+                            --restart unless-stopped \
+                            --env-file "$ENV_FILE" \
+                            -p 127.0.0.1:${NEW_PORT}:8080 \
+                            ${IMAGE_NAME}:${GIT_COMMIT}
+                    '''
+                }
+            }
+        }
+
+        stage('Health Check') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                sh '''
+                    echo "Checking ${NEW_CONTAINER}..."
+
+                    for i in $(seq 1 30); do
+
+                        if curl -fsS \
+                            http://127.0.0.1:${NEW_PORT}/health \
+                            > /dev/null; then
+
+                            echo "Health check passed."
+                            exit 0
+                        fi
+
+                        echo "Health check attempt $i failed."
+                        sleep 2
+                    done
+
+                    echo "Health check FAILED."
+
+                    docker logs ${NEW_CONTAINER} || true
+
+                    exit 1
+                '''
+            }
+        }
+
+        stage('Switch Nginx') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                sh '''
+                    sudo /usr/local/bin/switch-3p-doodle ${NEW_PORT}
+                '''
+            }
+        }
+
+        stage('Stop Old Container') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY'
+                }
+            }
+
+            steps {
+                sh '''
+                    if [ -n "${OLD_CONTAINER}" ]; then
+                        docker rm -f ${OLD_CONTAINER} || true
+                    fi
+                '''
+            }
+        }
+
+        /*
+         * =========================
+         * ROLLBACK
+         * =========================
+         */
+
+        stage('Validate Rollback') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                script {
+                    if (!params.ROLLBACK_COMMIT?.trim()) {
+                        error('ROLLBACK_COMMIT is required for rollback.')
+                    }
+
+                    echo "Rollback target: ${params.ROLLBACK_COMMIT}"
+                }
+            }
+        }
+
+        stage('Login to GHCR for Rollback') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "${GHCR_CREDENTIAL}",
+                        usernameVariable: 'GHCR_USERNAME',
+                        passwordVariable: 'GHCR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        echo "$GHCR_TOKEN" | docker login ghcr.io \
+                            -u "$GHCR_USERNAME" \
+                            --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Pull Rollback Image') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                sh """
+                    docker pull ${IMAGE_NAME}:${params.ROLLBACK_COMMIT}
+                """
+            }
+        }
+
+        stage('Determine Rollback Slot') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                script {
+
+                    def blueRunning = sh(
+                        script: """
+                            docker ps \
+                            --filter "name=^${BLUE_CONTAINER}\$" \
+                            --format "{{.Names}}"
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    def greenRunning = sh(
+                        script: """
+                            docker ps \
+                            --filter "name=^${GREEN_CONTAINER}\$" \
+                            --format "{{.Names}}"
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    if (blueRunning) {
+
+                        env.ROLLBACK_PORT = env.GREEN_PORT
+                        env.ROLLBACK_CONTAINER = env.GREEN_CONTAINER
+                        env.OLD_CONTAINER = env.BLUE_CONTAINER
+
+                    } else if (greenRunning) {
+
+                        env.ROLLBACK_PORT = env.BLUE_PORT
+                        env.ROLLBACK_CONTAINER = env.BLUE_CONTAINER
+                        env.OLD_CONTAINER = env.GREEN_CONTAINER
+
+                    } else {
+                        error('Cannot determine active deployment slot.')
+                    }
+
+                    echo "Rollback container: ${env.ROLLBACK_CONTAINER}"
+                    echo "Rollback port: ${env.ROLLBACK_PORT}"
+                }
+            }
+        }
+
+        stage('Start Rollback Container') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: "${ENV_CREDENTIAL}",
+                        variable: 'ENV_FILE'
+                    )
+                ]) {
+                    sh '''
+                        docker rm -f ${ROLLBACK_CONTAINER} 2>/dev/null || true
+
+                        docker run -d \
+                            --name ${ROLLBACK_CONTAINER} \
+                            --restart unless-stopped \
+                            --env-file "$ENV_FILE" \
+                            -p 127.0.0.1:${ROLLBACK_PORT}:8080 \
+                            ${IMAGE_NAME}:${ROLLBACK_COMMIT}
+                    '''
+                }
+            }
+        }
+
+        stage('Rollback Health Check') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                sh '''
+                    echo "Checking rollback container..."
+
+                    for i in $(seq 1 30); do
+
+                        if curl -fsS \
+                            http://127.0.0.1:${ROLLBACK_PORT}/health \
+                            > /dev/null; then
+
+                            echo "Rollback health check passed."
+                            exit 0
+                        fi
+
+                        echo "Rollback health check attempt $i failed."
+                        sleep 2
+                    done
+
+                    echo "Rollback health check FAILED."
+
+                    docker logs ${ROLLBACK_CONTAINER} || true
+
+                    exit 1
+                '''
+            }
+        }
+
+        stage('Switch Nginx To Rollback') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                sh '''
+                    sudo /usr/local/bin/switch-3p-doodle ${ROLLBACK_PORT}
+                '''
+            }
+        }
+
+        stage('Stop Previous Version') {
+            when {
+                expression {
+                    params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                sh '''
+                    if [ -n "${OLD_CONTAINER}" ]; then
+                        docker rm -f ${OLD_CONTAINER} || true
+                    fi
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Pipeline FAILED.'
+        }
+
+        always {
+            cleanWs()
+        }
+    }
+}
