@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { PopUp } from '../components/pop_up';
 import { Loading } from '../components/Loading';
 import { HomeBackground } from '../components/StaticLayers';
+import { createStompClient } from '../lib/realtime';
+import type { RoomStatusEvent } from '../lib/room';
 
 import './HomePage.css';
 
@@ -94,6 +96,40 @@ export function AuthSuccess() {
             setInitialLoading(false);
         }
     }, [session]);
+
+    // While waiting for a partner to join, listen for the server-pushed PAIRED
+    // event instead of relying on a one-time status fetch. Without this, the
+    // room creator never finds out the partner joined until they refresh.
+    useEffect(() => {
+        if (!session || roomStatus?.status !== 'WAITING' || !roomStatus.code) {
+            return;
+        }
+
+        const roomCode = roomStatus.code;
+        const client = createStompClient(apiUrl, session.access_token, 'AuthSuccess');
+
+        client.onConnect = () => {
+            client.subscribe(`/topic/room/${roomCode}`, (message) => {
+                const event: RoomStatusEvent = JSON.parse(message.body);
+                if (event.status === 'PAIRED') {
+                    setRoomStatus({
+                        status: 'PAIRED',
+                        code: roomCode,
+                        partner: event.partner,
+                    });
+                    setShowPairedPopup(true);
+                } else if (event.status === 'NO_ROOM') {
+                    setRoomStatus({ status: 'NO_ROOM' });
+                }
+            });
+        };
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+    }, [session, apiUrl, roomStatus?.status, roomStatus?.code]);
 
     // Handle navigation when paired (if popup is not shown or closed)
     useEffect(() => {

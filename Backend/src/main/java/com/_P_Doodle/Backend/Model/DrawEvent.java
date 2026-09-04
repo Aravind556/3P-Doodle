@@ -11,14 +11,16 @@ public class DrawEvent {
     private Integer thickness;
     private String tool; // "pen" or "eraser"
     private String strokeId;
-    private String eventType; // "START", "MOVE", "END", "CLEAR", "UNDO", "SYNC_REQUEST", "SYNC_STATE"
+    private String eventType; // "START", "MOVE", "END", "CLEAR", "UNDO"
     private List<StrokeSnapshot> strokes;
+    private List<StrokePoint> points;
+    private Long version;
 
     // Constructors
     public DrawEvent() {}
 
     public DrawEvent(String roomCode, String userId, Double x, Double y, String color,
-                     Integer thickness, String tool, String strokeId, String eventType, List<StrokeSnapshot> strokes) {
+                     Integer thickness, String tool, String strokeId, String eventType, List<StrokeSnapshot> strokes, List<StrokePoint> points, Long version) {
         this.roomCode = roomCode;
         this.userId = userId;
         this.x = x;
@@ -29,6 +31,8 @@ public class DrawEvent {
         this.strokeId = strokeId;
         this.eventType = eventType;
         this.strokes = strokes;
+        this.points = points;
+        this.version = version;
     }
 
     // Getters and Setters
@@ -110,5 +114,21 @@ public class DrawEvent {
 
     public void setStrokes(List<StrokeSnapshot> strokes) {
         this.strokes = strokes;
+    }
+
+    public List<StrokePoint> getPoints() {
+        return points;
+    }
+
+    public void setPoints(List<StrokePoint> points) {
+        this.points = points;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

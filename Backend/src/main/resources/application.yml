@@ -25,6 +25,16 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://${DB_ISSUER_URI}.supabase.co/auth/v1
+  
+app:
+  redis:
+    enabled: ${REDIS_ENABLED:false}
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    channel: ${REDIS_CHANNEL:whiteboard-events}
+    room-channel: ${REDIS_ROOM_CHANNEL:room-events}
+
 logging:
   level:
     org.springframework.security: DEBUG

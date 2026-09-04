@@ -1,10 +1,12 @@
 package com._P_Doodle.Backend.Service;
 
 import com._P_Doodle.Backend.Model.Room;
+import com._P_Doodle.Backend.Model.RoomStatusEvent;
 import com._P_Doodle.Backend.Model.User;
 import com._P_Doodle.Backend.Repository.RoomRepository;
 import com._P_Doodle.Backend.Repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +19,18 @@ import java.util.UUID;
 @Service
 public class RoomService {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private static final Logger log = LoggerFactory.getLogger(RoomService.class);
 
-    @Autowired
-    private UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
+    private final RoomRealtimeBroadcaster roomRealtimeBroadcaster;
+
+    public RoomService(RoomRepository roomRepository, UserRepository userRepository,
+                       RoomRealtimeBroadcaster roomRealtimeBroadcaster) {
+        this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
+        this.roomRealtimeBroadcaster = roomRealtimeBroadcaster;
+    }
 
     private String generateRoomCode() {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No confusing chars
@@ -33,6 +42,12 @@ public class RoomService {
         return code.toString();
     }
 
+    private static final long ROOM_EXPIRY_MINUTES = 10;
+
+    private boolean isExpired(Room room) {
+        return !room.getIsLocked() && room.getCreatedAt().plusMinutes(ROOM_EXPIRY_MINUTES).isBefore(LocalDateTime.now());
+    }
+
     @Transactional
     public Map<String, Object> createRoom(String userId) {
         UUID userUuid = UUID.fromString(userId);
@@ -41,13 +56,24 @@ public class RoomService {
         Optional<Room> existingRoom = roomRepository.findByUserId(userUuid);
         if (existingRoom.isPresent()) {
             Room room = existingRoom.get();
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", room.getRoomCode());
-            response.put("status", room.getIsLocked() ? "PAIRED" : "WAITING");
-            if (room.getIsLocked()) {
-                response.put("partner", getPartnerName(room, userUuid));
+
+            // An unpaired room past its join window is dead weight - clear it out
+            // instead of repeatedly handing back a code that joinRoom() will reject.
+            if (isExpired(room)) {
+                roomRepository.delete(room);
+                userRepository.findById(userId).ifPresent(u -> {
+                    u.setRoomId(null);
+                    userRepository.save(u);
+                });
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("code", room.getRoomCode());
+                response.put("status", room.getIsLocked() ? "PAIRED" : "WAITING");
+                if (room.getIsLocked()) {
+                    response.put("partner", getPartnerName(room, userUuid));
+                }
+                return response;
             }
-            return response;
         }
 
         // Generate unique code
@@ -82,10 +108,24 @@ public class RoomService {
     public Map<String, Object> joinRoom(String userId, String roomCode) {
         UUID userUuid = UUID.fromString(userId);
 
-        // Check if user already in a room
+        // Check if user already in a room. A stale, never-joined room that has
+        // already passed its expiry window shouldn't block the user from joining
+        // a different room - clean it up automatically instead of hard-blocking.
         Optional<Room> userRoom = roomRepository.findByUserId(userUuid);
         if (userRoom.isPresent()) {
-            throw new RuntimeException("You are already in a room");
+            Room existing = userRoom.get();
+            log.info("joinRoom: user {} attempting to join {} but already has room {} (locked={}, createdAt={})",
+                    userId, roomCode, existing.getRoomCode(), existing.getIsLocked(), existing.getCreatedAt());
+            if (isExpired(existing)) {
+                roomRepository.delete(existing);
+                userRepository.findById(userId).ifPresent(u -> {
+                    u.setRoomId(null);
+                    userRepository.save(u);
+                });
+                log.info("joinRoom: cleaned up expired existing room {} for user {}", existing.getRoomCode(), userId);
+            } else {
+                throw new RuntimeException("You are already in a room");
+            }
         }
 
         // Lock and get room
@@ -106,7 +146,7 @@ public class RoomService {
         }
 
         // Check room age (10 minutes expiry)
-        if (room.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now())) {
+        if (isExpired(room)) {
             throw new RuntimeException("Room code expired");
         }
 
@@ -136,6 +176,20 @@ public class RoomService {
         // Provide partner name immediately for the joining user (user2)
         response.put("partner", user1Name);
         response.put("partnerEmail", user1Email);
+
+        // A realtime notification failure must never roll back a successful pairing.
+        try {
+            roomRealtimeBroadcaster.broadcast(roomCode, new RoomStatusEvent(
+                    roomCode,
+                    "PAIRED",
+                    user2Name,
+                    getUserEmail(userUuid.toString()),
+                    "Partner joined room"
+            ));
+        } catch (Exception e) {
+            log.warn("Failed to publish PAIRED room status for room {}: {}", roomCode, e.getMessage(), e);
+        }
+
         return response;
     }
 
@@ -194,6 +248,9 @@ public class RoomService {
         
         if (roomOpt.isPresent()) {
             Room room = roomOpt.get();
+            String roomCode = room.getRoomCode();
+            log.info("leaveRoom: user {} is leaving room {} (user1={}, user2={}) - deleting room and clearing both participants",
+                    userId, roomCode, room.getUser1Id(), room.getUser2Id());
             // Clear room linkage for both participants, then remove the room
             if (room.getUser1Id() != null) {
                 userRepository.findById(room.getUser1Id().toString()).ifPresent(u -> {
@@ -208,6 +265,22 @@ public class RoomService {
                 });
             }
             roomRepository.delete(room);
+            log.info("leaveRoom: room {} deleted for user {}", roomCode, userId);
+
+            // A realtime notification failure must never roll back the leave itself.
+            try {
+                roomRealtimeBroadcaster.broadcast(roomCode, new RoomStatusEvent(
+                        roomCode,
+                        "NO_ROOM",
+                        null,
+                        null,
+                        "Room closed"
+                ));
+            } catch (Exception e) {
+                log.warn("Failed to publish NO_ROOM room status for room {}: {}", roomCode, e.getMessage(), e);
+            }
+        } else {
+            log.info("leaveRoom called for user {} but no room was found for them", userId);
         }
         
         // Clear user's room association

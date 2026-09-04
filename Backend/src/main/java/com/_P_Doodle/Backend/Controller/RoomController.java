@@ -18,7 +18,7 @@ public class RoomController {
 
     private final RoomService roomService;
     private final UserService userService;
-    
+
     public RoomController(RoomService roomService, UserService userService) {
         this.roomService = roomService;
         this.userService = userService;

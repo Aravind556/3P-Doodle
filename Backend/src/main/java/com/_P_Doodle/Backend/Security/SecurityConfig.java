@@ -2,6 +2,7 @@ package com._P_Doodle.Backend.Security;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,11 +35,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Explicitly allow frontend origins
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "https://3pdoodle.vercel.app"));
+        // Use patterns to allow all localhost ports (for multi-browser local testing)
+        // and production origins. setAllowedOriginPatterns is compatible with
+        // setAllowCredentials(true), unlike setAllowedOrigins("*").
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://3pdoodle.vercel.app",
+                "https://*.vercel.app",
+                "https://*.onrender.com"));
         // Allow all common methods
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // Allow Authorization header
@@ -51,4 +56,10 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 }
+

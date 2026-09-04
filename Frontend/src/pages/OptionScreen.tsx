@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+import type { StompSubscription } from '@stomp/stompjs';
 import { useAuth } from '../context/AuthContext';
+import { createStompClient } from '../lib/realtime';
+import type { RoomStatusEvent, RoomStatusResponse } from '../lib/room';
 import './OptionScreen.css';
 import './HomePage.css';
 import { Loading } from '../components/Loading';
@@ -11,25 +14,20 @@ export function OptionScreen() {
     const { logout, user, session } = useAuth();
 
     const [partnerName, setPartnerName] = useState<string>('');
+    const [roomCode, setRoomCode] = useState<string>('');
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [showUserName, setShowUserName] = useState<boolean>(false);
     const [showPartnerName, setShowPartnerName] = useState<boolean>(false);
-
-    // Loading states
     const [imagesLoaded, setImagesLoaded] = useState(false);
-    const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080';
+    const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) || 'http://localhost:8080';
 
     const myName = useMemo(() => {
-        const meta: any = user?.user_metadata || {};
-        return (
-            meta.full_name ||
-            meta.name ||
-            (user?.email ? user.email.split('@')[0] : '') ||
-            'You'
-        );
+        const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+        const fullName = typeof meta.full_name === 'string' ? meta.full_name : undefined;
+        const displayName = typeof meta.name === 'string' ? meta.name : undefined;
+        return fullName || displayName || (user?.email ? user.email.split('@')[0] : '') || 'You';
     }, [user]);
 
-    // Preload images
     useEffect(() => {
         const imageUrls = [
             '/assets/optional_page/bluebg.png',
@@ -42,7 +40,6 @@ export function OptionScreen() {
 
         let loadedCount = 0;
         const total = imageUrls.length;
-
         const handleImageLoad = () => {
             loadedCount++;
             if (loadedCount >= total) {
@@ -59,51 +56,60 @@ export function OptionScreen() {
     }, []);
 
     useEffect(() => {
-        let interval: number | undefined;
-        let attempts = 0;
-
-        const fetchStatus = async () => {
+        const bootstrap = async () => {
             if (!session) return;
             try {
                 const res = await fetch(`${apiUrl}/room/status`, {
                     headers: { Authorization: `Bearer ${session.access_token}` },
                 });
-                if (res.ok) {
-                    const data = await res.json();
-
-                    if (data.status === 'PAIRED') {
-                        if (data.partner) setPartnerName(data.partner);
-                        // DO NOT stop polling, or we won't know if the partner leaves!
-                    } else if (data.status === 'NO_ROOM' || data.status === 'WAITING') {
-                        // If link broken then go back home
-                        if (interval) window.clearInterval(interval);
-                        navigate('/Home');
-                    } else if (res.status === 401) {
-                        // Session expired or missing; stop polling and surface via logout
-                        if (interval) window.clearInterval(interval);
+                if (!res.ok) {
+                    if (res.status === 401) {
                         await logout();
                     }
+                    return;
                 }
-            } catch (e) {
+
+                const data: RoomStatusResponse = await res.json();
+                if (data.status !== 'PAIRED' || !data.roomCode) {
+                    navigate('/Home');
+                    return;
+                }
+                setRoomCode(data.roomCode);
+                setPartnerName(data.partner || 'Partner');
+            } catch {
                 // ignore
-            } finally {
-                attempts++;
-                if (attempts >= 10 && interval) {
-                    // Stop after ~30s (10 * 3s)
-                    window.clearInterval(interval);
-                }
             }
         };
 
-        // Initial fetch
-        fetchStatus();
-        // Poll every 3s until partner data is available (or timeout)
-        interval = window.setInterval(fetchStatus, 3000);
+        bootstrap();
+    }, [session, apiUrl, logout, navigate]);
+
+    useEffect(() => {
+        if (!session || !roomCode) return;
+
+        const client = createStompClient(apiUrl, session.access_token, 'RoomStatus');
+        let subscription: StompSubscription | null = null;
+
+        client.onConnect = () => {
+            subscription = client.subscribe(`/topic/room/${roomCode}`, (message) => {
+                const event: RoomStatusEvent = JSON.parse(message.body);
+                if (event.status === 'NO_ROOM') {
+                    navigate('/Home');
+                    return;
+                }
+                if (event.status === 'PAIRED' && event.partner) {
+                    setPartnerName(event.partner);
+                }
+            });
+        };
+
+        client.activate();
 
         return () => {
-            if (interval) window.clearInterval(interval);
+            if (subscription) subscription.unsubscribe();
+            client.deactivate();
         };
-    }, [session, apiUrl]);
+    }, [session, roomCode, apiUrl, navigate]);
 
     const breakLink = async () => {
         if (!session) return;
@@ -115,7 +121,7 @@ export function OptionScreen() {
             if (res.ok) {
                 navigate('/Home');
             }
-        } catch (e) {
+        } catch {
             // ignore
         }
     };
@@ -251,16 +257,10 @@ export function OptionScreen() {
                     exit={{ opacity: 0, scale: 0.8, y: 10 }}
                     transition={{ duration: 0.2 }}
                 >
-                    <button
-                        className="menu-item"
-                        onClick={() => handleMenuItemClick('logout')}
-                    >
+                    <button className="menu-item" onClick={() => handleMenuItemClick('logout')}>
                         Sign Out
                     </button>
-                    <button
-                        className="menu-item"
-                        onClick={() => handleMenuItemClick('breaklink')}
-                    >
+                    <button className="menu-item" onClick={() => handleMenuItemClick('breaklink')}>
                         Break Link
                     </button>
                 </motion.div>
