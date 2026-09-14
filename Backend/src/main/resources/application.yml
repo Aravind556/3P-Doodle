@@ -28,9 +28,9 @@ spring:
   
 app:
   redis:
-    enabled: ${REDIS_ENABLED:false}
+    enabled: ${REDIS_ENABLED:true}
     host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
+    port: ${REDIS_PORT:}
     password: ${REDIS_PASSWORD:}
     channel: ${REDIS_CHANNEL:whiteboard-events}
     room-channel: ${REDIS_ROOM_CHANNEL:room-events}
