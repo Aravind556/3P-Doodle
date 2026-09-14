@@ -24,6 +24,10 @@ pipeline {
         BLUE_CONTAINER = '3p-doodle-blue'
         GREEN_CONTAINER = '3p-doodle-green'
 
+        DOCKER_NETWORK = '3p-doodle-net'
+        REDIS_CONTAINER = '3p-doodle-redis'
+        REDIS_VOLUME = '3p-doodle-redis-data'
+
         ENV_CREDENTIAL = '3p-doodle-env'
         GHCR_CREDENTIAL = 'ghcr-credentials'
     }
@@ -170,6 +174,52 @@ pipeline {
             }
         }
 
+        stage('Ensure Shared Infrastructure') {
+            when {
+                expression {
+                    params.ACTION == 'DEPLOY' || params.ACTION == 'ROLLBACK'
+                }
+            }
+
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: "${ENV_CREDENTIAL}",
+                        variable: 'ENV_FILE'
+                    )
+                ]) {
+                    sh '''
+                        docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || \
+                            docker network create ${DOCKER_NETWORK}
+
+                        if [ -z "$(docker ps -q --filter "name=^${REDIS_CONTAINER}$")" ]; then
+                            docker rm -f ${REDIS_CONTAINER} 2>/dev/null || true
+
+                            REDIS_PW=$(grep -E '^REDIS_PASSWORD=' "$ENV_FILE" | head -n1 | cut -d= -f2-)
+
+                            if [ -n "$REDIS_PW" ]; then
+                                docker run -d \
+                                    --name ${REDIS_CONTAINER} \
+                                    --restart unless-stopped \
+                                    --network ${DOCKER_NETWORK} \
+                                    -v ${REDIS_VOLUME}:/data \
+                                    redis:7-alpine \
+                                    redis-server --appendonly yes --requirepass "$REDIS_PW"
+                            else
+                                docker run -d \
+                                    --name ${REDIS_CONTAINER} \
+                                    --restart unless-stopped \
+                                    --network ${DOCKER_NETWORK} \
+                                    -v ${REDIS_VOLUME}:/data \
+                                    redis:7-alpine \
+                                    redis-server --appendonly yes
+                            fi
+                        fi
+                    '''
+                }
+            }
+        }
+
         stage('Start New Container') {
             when {
                 expression {
@@ -190,6 +240,7 @@ pipeline {
                         docker run -d \
                             --name ${NEW_CONTAINER} \
                             --restart unless-stopped \
+                            --network ${DOCKER_NETWORK} \
                             --env-file "$ENV_FILE" \
                             -p 127.0.0.1:${NEW_PORT}:8080 \
                             ${IMAGE_NAME}:${GIT_COMMIT}
@@ -394,6 +445,7 @@ pipeline {
                         docker run -d \
                             --name ${ROLLBACK_CONTAINER} \
                             --restart unless-stopped \
+                            --network ${DOCKER_NETWORK} \
                             --env-file "$ENV_FILE" \
                             -p 127.0.0.1:${ROLLBACK_PORT}:8080 \
                             ${IMAGE_NAME}:${ROLLBACK_COMMIT}
